@@ -7,7 +7,7 @@
 
 #include <wiringPi.h>
 
-#include "RemoteTransmitter.h"
+#include "OokTransmitter.h"
 
 #define RT_RAW_PRO    -1
 #define RT_ACTION_PRO 0
@@ -23,7 +23,9 @@ int   getDeviceCode(po::variables_map& vm);
 int   getState(std::string& cmd);
 bool  displayHelp(po::variables_map& vm, po::options_description& desc);
 bool  displayVersion(po::variables_map& vm, char **argv);
-void  stringCodeToTrits(std::string& cmd, unsigned char trits[12]);
+void  stringCodeTritsToTrits(std::string& cmd, unsigned char trits[12]);
+void  stringCodeBitsToTrits(std::string& cmd, unsigned char trits[12]);
+
 const double SW_VERSION = 1.0;
 
 int main(int argc, char **argv) {
@@ -49,7 +51,7 @@ int main(int argc, char **argv) {
 		("gpio-pin,g",    po::value<int>(&pin)->required(), "GPIO pin (wiringPi)")
 		("protocol,p",    po::value<int>(&protocol)->required(),"RF Protocol (0,1,2 or -1)")
 		("system-code,s", po::value<int>(),                 "System code")
-		("device-code,d", po::value<int>(),                 "Device code")
+		("device-code,d", po::value<char>(),                 "Device code")
 		("pulse-us,P",    po::value<unsigned int>(),        "Pulse in micro seconds (1/4 period)")
 		// ("raw-trits,T",   po::value< std::string >(),    "Raw code in trits")
 		// ("raw-bits,B",    po::value< std::string >(),    "Raw code in bits")
@@ -92,7 +94,7 @@ int main(int argc, char **argv) {
 
   // load wiringPi
 	if( wiringPiSetup() == -1) {
-		printf("WiringPi setup failed. Is wiringPi properly installed?");
+		cout << "WiringPi setup failed. Is wiringPi properly installed?\n";
 		return EXIT_FAILURE;
 	};
 
@@ -119,8 +121,8 @@ int main(int argc, char **argv) {
     if(verbose) {
       cout << "Sending:\t" << "system code: " << systemCode << " device code: " << deviceCode << " state: " << state << endl;
     };
-    ActionTransmitter transmitter(pin);
-    transmitter.sendSignal(systemCode, deviceCode + 65, (state == 1)?true:false);
+    // ActionTransmitter transmitter(pin);
+    // transmitter.sendSignal(systemCode, deviceCode + 65, (state == 1)?true:false);
 
   } else if (protocol == -1) {
 
@@ -135,8 +137,8 @@ int main(int argc, char **argv) {
     // raw length can be 12 trits OR 24 bits or decimal (shorter than 12)
     if( cmd.length() == 12 ) {
       unsigned char trits[12];
-      stringCodeToTrits(cmd, trits);
-      RemoteTransmitter transmitter(pin, pulseUs, 4);
+      stringCodeTritsToTrits(cmd, trits);
+      OokTransmitter transmitter(pin, pulseUs, 4);
       transmitter.sendTelegram( trits );
     } else if ( cmd.length() == 24 ) {
 
@@ -151,11 +153,19 @@ int main(int argc, char **argv) {
 	return EXIT_SUCCESS;
 }
 
-void stringCodeToTrits(std::string& cmd, unsigned char trits[12]) {
-  for(short int i = 0; i < cmd.length(); i++) {
+void stringCodeTritsToTrits(std::string& cmd, unsigned char trits[12]) {
+  for(unsigned short int i = 0; i < 12; i++) {
+    // 0,1,2
     trits[i] = (cmd[i] == '0')?0:((cmd[i] == '1')?1:2);
   };
 };
+
+void stringCodeBitsToTrits(std::string& cmd, unsigned char trits[12]) {
+  for(unsigned short int i = 0; i < 12; i++) {
+    // 00 = 0, 11 = 1, 01 = 2
+    trits[i] = (cmd[i*2]  + cmd[i*2 + 1] - '0' == '1')?2:((cmd[i*2] == '1')?1:0);
+  };
+}
 
 void setupPins(int pin, bool verbose) {
   if(verbose) {
@@ -171,12 +181,24 @@ int getSystemCode(po::variables_map& vm) {
 };
 
 int getDeviceCode(po::variables_map& vm) {
-  return vm["device-code"].as<int>();
+  char deviceCodeChar = vm["device-code"].as<char>();
+  if ( deviceCodeChar >= 'a') {
+    return deviceCodeChar - 'a';
+  };
+  if ( deviceCodeChar >= 'A') {
+    return deviceCodeChar - 'A';
+  };
+  return deviceCodeChar - '0';
 };
 
 int getState(std::string& cmd) {
   // vector<string> cmd = vm["command"].as< vector<string> >();
-  int state = ( cmd[0] == '0')?0:1;
+  // 0, 1, on, off, ON, OFF, true, false, TRUE, FALSE
+  int state = 0;
+  if( cmd[0] == '1' || cmd.compare("on") == 0 || cmd.compare("ON") == 0 || cmd.compare("true") == 0 || cmd.compare("TRUE") == 0 ) {
+    state = 1;
+  };
+
   return state;
 };
 

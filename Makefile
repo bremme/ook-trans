@@ -13,15 +13,15 @@ all: rf-trans
 
 # link
 rf-trans: rf-trans.o
-	$(CC) rf-trans.o RemoteTransmitter.o -lboost_program_options -lwiringPi -o rf-trans
+	$(CC) rf-trans.o OokTransmitter.o -lboost_program_options -lwiringPi -o rf-trans
 
 # build rf-trans object
-rf-trans.o: RemoteTransmitter.o rf-trans.cpp
+rf-trans.o: OokTransmitter.o rf-trans.cpp
 	$(CC) $(CFLAGS) rf-trans.cpp
 
-# build RemoteTransmitter object
-RemoteTransmitter.o: RemoteTransmitter.cpp RemoteTransmitter.h
-	$(CC) $(CFLAGS) RemoteTransmitter.cpp
+# build OokTransmitter object
+OokTransmitter.o: OokTransmitter.cpp OokTransmitter.h
+	$(CC) $(CFLAGS) OokTransmitter.cpp
 
 clean:
 	rm *.o
