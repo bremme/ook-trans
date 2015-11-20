@@ -66,7 +66,7 @@ void OokTransmitter::sendCode(unsigned char pin, unsigned long code, unsigned in
 		dataBase4<<=2;
 		dataBase4|=(code%3);
 		code/=3;
-	}
+	};
 
 	repeats = 1 << (repeats & B111); // repeats := 2^repeats;
 
@@ -74,7 +74,7 @@ void OokTransmitter::sendCode(unsigned char pin, unsigned long code, unsigned in
 		// Sent one telegram
 
     // Send termination/synchronization-signal. Total length: 32 periods
-    transmitSync(pin, pulseMicroSecond, syncPulseWidth);
+    transmitSync(pin, pulseMicroSecond);
 
 		// Recycle code as working var to save memory
 		code=dataBase4;
@@ -122,7 +122,8 @@ void OokTransmitter::transmitSync(unsigned char pin, unsigned int pulseMicroSeco
   digitalWrite(pin, LOW);
   delayMicroseconds(pulseMicroSecond*syncPulseWidth);
 
-}
+};
+
 void OokTransmitter::transmitTrit(unsigned char trit, unsigned char pin, unsigned int pulseMicroSecond) {
   if ( trit == 0 ) {
     transmitBit(0, pin, pulseMicroSecond);
@@ -161,37 +162,37 @@ bool OokTransmitter::isSameCode(unsigned long encodedTelegram, unsigned long rec
 /************
 * ActionTransmitter
 ************/
-//
-// ActionTransmitter::ActionTransmitter(unsigned char pin, unsigned int pulseMicroSecond, unsigned char repeats) : OokTransmitter(pin,pulseMicroSecond,repeats) {
-// 	// Call constructor
-// }
-//
-//
-// void ActionTransmitter::sendSignal(unsigned char systemCode, char device, bool on) {
-// 	sendTelegram(getTelegram(systemCode,device,on), _pin);
-// }
-//
-// unsigned long ActionTransmitter::getTelegram(unsigned char systemCode, char device, bool on) {
-// 	unsigned char trits[12];
-//
-// 	device-=65;
-//
-// 	for (unsigned char i=0; i<5; i++) {
-// 		// Trits 0-4 contain address (2^5=32 addresses)
-// 		trits[i]=(systemCode & 1)?1:2;
-// 		systemCode>>=1;
-//
-// 		// Trits 5-9 contain device. Only one trit has value 0, others have 2 (float)!
-// 		trits[i+5]=(i==device?0:2);
-// 	}
-//
-// 	// Switch on or off
-// 	trits[10]=(!on?0:2);
-// 	trits[11]=(on?0:2);
-//
-// 	return encodeTelegram(trits);
-// }
-//
+
+ActionTransmitter::ActionTransmitter(unsigned char pin, unsigned int pulseMicroSecond, unsigned char repeats) : OokTransmitter(pin,pulseMicroSecond,repeats) {
+	// Call constructor
+}
+
+
+void ActionTransmitter::sendSignal(unsigned char systemCode, char device, bool on) {
+	sendTelegram(getTelegram(systemCode,device,on), _pin);
+}
+
+unsigned long ActionTransmitter::getTelegram(unsigned char systemCode, char device, bool on) {
+	unsigned char trits[12];
+
+	device-=65;
+
+	for (unsigned char i=0; i<5; i++) {
+		// Trits 0-4 contain address (2^5=32 addresses)
+		trits[i]=(systemCode & 1)?1:2;
+		systemCode>>=1;
+
+		// Trits 5-9 contain device. Only one trit has value 0, others have 2 (float)!
+		trits[i+5]=(i==device?0:2);
+	}
+
+	// Switch on or off
+	trits[10]=(!on?0:2);
+	trits[11]=(on?0:2);
+
+	return encodeTelegram(trits);
+}
+
 // /************
 // * BlokkerTransmitter
 // ************/

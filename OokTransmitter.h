@@ -92,7 +92,7 @@ class OokTransmitter {
 		static void sendCode(unsigned char pin, unsigned long code, unsigned int pulseMicroSecond, unsigned char repeats, unsigned char syncPulseWidth = 31);
 
 
-    static void transmitSync()
+    static void transmitSync(unsigned char pin, unsigned int pulseMicroSecond, unsigned char syncPulseWidth = 31);
     static void transmitTrit(unsigned char trit, unsigned char pin, unsigned int pulseMicroSecond);
     static void transmitBit(unsigned char bit, unsigned char pin, unsigned int pulseMicroSecond);
 

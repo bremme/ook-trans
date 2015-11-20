@@ -121,8 +121,8 @@ int main(int argc, char **argv) {
     if(verbose) {
       cout << "Sending:\t" << "system code: " << systemCode << " device code: " << deviceCode << " state: " << state << endl;
     };
-    // ActionTransmitter transmitter(pin);
-    // transmitter.sendSignal(systemCode, deviceCode + 65, (state == 1)?true:false);
+    ActionTransmitter transmitter(pin);
+    transmitter.sendSignal(systemCode, deviceCode + 65, (state == 1)?true:false);
 
   } else if (protocol == -1) {
 
